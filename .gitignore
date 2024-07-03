@@ -1,0 +1,5 @@
+predict/
+output/
+input/val/
+input/train/
+.DS_Store
