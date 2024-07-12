@@ -3,3 +3,5 @@ output/
 input/val/
 input/train/
 .DS_Store
+__pycache__
+.ipynb_checkpoints/

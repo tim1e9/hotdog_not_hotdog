@@ -92,11 +92,11 @@ def get_image_metadata(image_dir: str, metadata_dir: str):
     return image_metadata
 
 # Register a single phase of the datasets (e.g. training, validation, etc)
-def register_dataset(dataset_dir: str, phase: str, all_classes):
-    image_dir = os.path.join(dataset_dir, phase, 'imgs')
-    metadata_dir = os.path.join(dataset_dir, phase, 'anns')
-    DatasetCatalog.register(phase, get_image_metadata(image_dir, metadata_dir))
-    MetadataCatalog.get(phase).set(thing_classes=all_classes)
+# def register_dataset(dataset_dir: str, phase: str, all_classes):
+#     image_dir = os.path.join(dataset_dir, phase, 'imgs')
+#     metadata_dir = os.path.join(dataset_dir, phase, 'anns')
+#     DatasetCatalog.register(phase, lambda: get_image_metadata(image_dir, metadata_dir))
+#     MetadataCatalog.get(phase).set(thing_classes=all_classes)
 
 
 # Register the training and validation datasets
@@ -105,11 +105,17 @@ def register_all_datasets(dataset_dir: str, classes_filename: str):
     with open(full_classes_filename, 'r') as f:
         all_classes = f.read().splitlines()    
 
-    # Register training data
-    register_dataset(dataset_dir, 'train', all_classes)
+    for d in ['train', 'val']:
+        DatasetCatalog.register(d, lambda d=d: get_image_metadata(os.path.join(dataset_dir, d, 'imgs'),
+                                                                  os.path.join(dataset_dir, d, 'anns')))
+        MetadataCatalog.get(d).set(thing_classes=all_classes)
 
-    # Register validation data
-    register_dataset(dataset_dir, 'val', all_classes)
+
+    # # Register training data
+    # register_dataset(dataset_dir, 'train', all_classes)
+
+    # # Register validation data
+    # register_dataset(dataset_dir, 'val', all_classes)
 
     # Return the total number of classes
     return len(all_classes)
