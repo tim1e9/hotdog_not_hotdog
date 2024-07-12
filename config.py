@@ -17,8 +17,9 @@ def load_config_for_model(model_name: str, output_dir: str, use_gpu: bool, num_c
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(model_name)
 
     cfg.OUTPUT_DIR = output_dir
+    cfg.MODEL.DEVICE = 'gpu'
 
-    if use_gpu:
+    if use_gpu == True:
         cfg.MODEL.DEVICE = 'gpu'
     else:
         cfg.MODEL.DEVICE = 'cpu'
