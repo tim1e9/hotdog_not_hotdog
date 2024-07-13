@@ -17,10 +17,9 @@ def load_config_for_model(model_name: str, output_dir: str, use_gpu: bool, num_c
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(model_name)
 
     cfg.OUTPUT_DIR = output_dir
-    cfg.MODEL.DEVICE = 'gpu'
 
     if use_gpu == True:
-        cfg.MODEL.DEVICE = 'gpu'
+        cfg.MODEL.DEVICE = 'cuda'
     else:
         cfg.MODEL.DEVICE = 'cpu'
 
@@ -93,11 +92,11 @@ def get_image_metadata(image_dir: str, metadata_dir: str):
     return image_metadata
 
 # Register a single phase of the datasets (e.g. training, validation, etc)
-# def register_dataset(dataset_dir: str, phase: str, all_classes):
-#     image_dir = os.path.join(dataset_dir, phase, 'imgs')
-#     metadata_dir = os.path.join(dataset_dir, phase, 'anns')
-#     DatasetCatalog.register(phase, lambda: get_image_metadata(image_dir, metadata_dir))
-#     MetadataCatalog.get(phase).set(thing_classes=all_classes)
+def register_dataset(dataset_dir: str, phase: str, all_classes):
+    image_dir = os.path.join(dataset_dir, phase, 'imgs')
+    metadata_dir = os.path.join(dataset_dir, phase, 'anns')
+    DatasetCatalog.register(phase, lambda: get_image_metadata(image_dir, metadata_dir))
+    MetadataCatalog.get(phase).set(thing_classes=all_classes)
 
 
 # Register the training and validation datasets
@@ -106,17 +105,11 @@ def register_all_datasets(dataset_dir: str, classes_filename: str):
     with open(full_classes_filename, 'r') as f:
         all_classes = f.read().splitlines()    
 
-    for d in ['train', 'val']:
-        DatasetCatalog.register(d, lambda d=d: get_image_metadata(os.path.join(dataset_dir, d, 'imgs'),
-                                                                  os.path.join(dataset_dir, d, 'anns')))
-        MetadataCatalog.get(d).set(thing_classes=all_classes)
-
-
     # # Register training data
-    # register_dataset(dataset_dir, 'train', all_classes)
+    register_dataset(dataset_dir, 'train', all_classes)
 
     # # Register validation data
-    # register_dataset(dataset_dir, 'val', all_classes)
+    register_dataset(dataset_dir, 'val', all_classes)
 
     # Return the total number of classes
     return len(all_classes)
