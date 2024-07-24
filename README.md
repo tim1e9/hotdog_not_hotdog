@@ -109,11 +109,11 @@ As far as a runtime for the finalized application, the following high level arch
 ## Step 5: Transform the Data
 
 When selecting the model to be used, it's critical to understand the file format that it expects to find.
-In my case, both my was in the YOLO format, but Detectron expected a slightly different format.
+In my case, my metadata was in the YOLO format, but Detectron expected a slightly different format.
 
 In `config.py`, I include a function to transorm YOLO format into a format that Detectron2 accepts. In this
 case, the data was small enough to load completely into memory, so a real-time transformation was feasible.
-However, if your data set is too big for this, consider an interim ETL (Extract, Transform, and Load) Job
+However, if your dataset is too big for this, consider an interim ETL (Extract, Transform, and Load) Job
 to shape the data before loading.
 
 In general, Detectron2 expects data in a format similar to the following:
@@ -141,16 +141,110 @@ https://docs.cogniflow.ai/en/article/how-to-create-a-dataset-for-object-detectio
 
 ## Step 6: Train the Model (and Validate it too)
 
-## Step 7: Develop the Runtime Code
+There are two different ways that data scientists work with models:
+1. From a command line
+2. From a Jupyter Notebook
+
+This repo includes code to support both processes. However, the initial documentation
+will use the command line. And specifically, it will leverage an AWS EC2 instance which
+is properly configured with support for both CUDA and Python. (See the appendix for
+more details on how to build this environment, if it's unfamiliar.)
+
+The basic training steps are as follows:
+1. Obtain a machine and configure it appropriately.
+2. Clone this repository onto the machine.
+3. Obtain a dataset, and extract it into the correct directory format.
+4. View the code (`train_hot_doggie.py`) in an editor, and review the training parameters.
+5. Run the code.
+6. Assess the results.
+7. If the results are acceptable, you're done. If not, go back to step 4.
+
+### Obtain a machine and configure it appropriately
+
+In my case, I used the following EC2 instance: g5.2xlarge. This machine comes with
+1 NVIDIA GPU, and provides sufficient processing power for this exercise. Be sure
+to properly configure your VPC, subnets, and security groups so that you can `ssh`
+onto the machine. Also, be sure to load software - such as `git` - so that you can
+get the source code.
+
+### Clone the repository
+
+Connect to the machine, and create a development directory. Once created, clone
+the repo into the directory: `git clone https://github.com/tim1e9/hotdog_not_hotdog.git`.
+
+### Dataset placement
+
+Obtain the dataset and place it in the `input/` subdirectory within the repository.
+Ensure that the data conforms to the expected directory structure. Also, ensure that
+the metadata is in the proper format. (In this case, the input is expected to be in
+YOLO format. If the metadata is in a different format, consider altering the method
+named `get_bounding_boxes()` in `config.py` accordingly.) 
+
+### Review the Code
+
+Review the contents of `train_hot_doggie.py` and update any of the various model
+parameters as needed. It should be noted that most of the defaults are reasonable
+starting points, but others may feel comfortable starting with different initial
+values.
+
+It's also worthwhile to review `train_model.py` and review some of the default values
+within the main driver program. 
+
+When satisfied with the parameters, the following command will start the training
+of the model:
+`python train_hot_doggie.py --use_gpu True`
+
+Depending on the power of the GPU, the code will run in as little as 30 minutes, or up
+to several hours.
+
+### Assess the results
+
+The code will create the trained model, and put the results in the `./output/` folder.
+From there, it's possible to view the results by running `plot_loss.py`. Based on the
+plot, determine your level of comfort with how well the model has been trained.
+
+If the results aren't acceptable, consider "tweaking" the various model parameters.
+Some of the key values include:
+ - Model name
+ - Learning rate
+ - Batch size
+ - Number of iterations
+
+It may also be a good idea to rebalance the training and validation datasets.
+
+After tweaking the parameters, it will be necessary to re-train the model.
+
+You may have noticed that this isn't exactly a data-driven process with explicit rules
+and outcomes. Instead, it's necessary to "use your best judgement" to determine when
+the model's loss is within an acceptable range. 
+
+
+## Step 7: Test the trained model
+
+At this point, it's a good idea to see how accurate the model is with completely new
+data. To check a brand new image, I'll use file named `hotdog_not_hotdog.py`.
+
+To run the code, issue the following command:
+`python hotdog_not_hotdog.py <image> <model>`
+
+Where:
+- image: the path to a candidate image
+- model: the path to the trained model. (It will be in the `./output` directory)
+
+Example:
+`python hotdog_not_hotdog.py ./testimage/test.jpg ./output/model_final.pth`
+
+After running, the image will be displayed, and if a hot dog has been found, it will
+be highlighted in a red bounding box.
+
 
 ## Step 8: Test, Tune, and Tune Again
 
+Coming soon.
+
 ## Step 9: Deploy
 
-
-
-Command from tutorial:
-`python train.py --device gpu --learning-rate 0.00001 --iterations 5000`
+Coming soon.
 
 
 
